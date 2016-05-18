@@ -39,6 +39,14 @@
             top: 5px;
             right: 5px;
         }
+
+        #map{
+            border: 1px solid black;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+        }
+
     </style>
     <link rel="stylesheet" href="css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8" />
 </head>
@@ -196,7 +204,11 @@
     });
 
     // overview statistic
-    var svg = d3.select("body").append("svg").attr("width", 50).attr("height", 50);
+    var svg_map = d3.select("body").append("svg").attr("width", 300).attr("height", 300).attr("id", "map");
+    var average = svg_map.append("g");
+    average.append("text").text("average links:").attr("x", 0).attr("y", 10);
+    average.append("text").text("147").attr("x", 70).attr("y", 10);
+
 </script>
 
 <input type="text" placeholder="search..." id="txtSearch">
