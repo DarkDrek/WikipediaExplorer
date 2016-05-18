@@ -33,6 +33,12 @@
             text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
         }
 
+        #txtSearch{
+            float: right;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
     </style>
     <link rel="stylesheet" href="css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8" />
 </head>
@@ -188,5 +194,11 @@
         });
         Chain().apply(null, chainArray);
     });
+
+    // overview statistic
+    var svg = d3.select("body").append("svg").attr("width", 50).attr("height", 50);
 </script>
+
+<input type="text" placeholder="search..." id="txtSearch">
 </body>
+</html>
