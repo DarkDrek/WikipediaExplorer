@@ -67,7 +67,10 @@
 </script>
 
 <script>
-    var mwjs = new MediaWikiJS('http://en.wikipedia.org', null, null);
+    var lang = "en";
+    var node_sizes = {min:Number.MAX_VALUE, max:Number.MIN_VALUE};
+
+    var mwjs = new MediaWikiJS('http://' + lang + '.wikipedia.org', null, null);
     var linksFromData = function (data) {
         var pages = data.query.pages;
         var Links = pages[Object.keys(pages)[0]].links.map(function (obj) {
@@ -76,18 +79,24 @@
         );
 
         return Links.map(function (link) {
-            return {source: pages[Object.keys(pages)[0]].title, target: link, type: "suit"};
+            return {
+                source: pages[Object.keys(pages)[0]].title,
+                target: link,
+                type: "suit",
+                source_size: pages[Object.keys(pages)[0]].revisions[0].size
+            };
         });
     };
 
     mwjs.send({
         action: 'query',
-        prop: 'links',
+        prop:  'links|revisions',
+        rvprop: 'size',
         pllimit: '5',
         //titles: 'Gmina Tolkmicko',
         generator: 'random',
         grnnamespace: '0'
-    }, function (data) {
+    }, function (data) { console.log(data);
         var links = linksFromData(data);
         var chainArray = [function (data, next) {
             next(links)
@@ -97,7 +106,8 @@
                     chainArray.push(function (data, next) {
                         mwjs.send({
                             action: 'query',
-                            prop: 'links',
+                            prop: 'links|revisions',
+                            rvprop: 'size',
                             pllimit: '10',
                             titles: element.target
                         }, function (siteData) {
@@ -116,7 +126,12 @@
             result.forEach(function (link) {
                 link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
                 link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
+                link.source.size = link.source_size;
+                node_sizes.max = Math.max(node_sizes.max, link.source.size );
+                node_sizes.min = Math.min(node_sizes.min, link.source.size );
             });
+
+            var scale = d3.scale.log().domain([1,node_sizes.max]).range([6,18]);
 
             var width = window.innerWidth * 0.9, height = window.innerHeight * 0.9;
 
@@ -162,14 +177,19 @@
             var circle = svg.append("g").selectAll("circle")
                     .data(force.nodes())
                     .enter().append("circle")
-                    .attr("r", 6)
+                    .attr("r", function (d) {
+                        if(d.size != undefined){
+                            return scale(d.size);
+                        }
+                        return 6;
+                    })
                     .on('click', function (c) {
                         /*var popup = new $.Popup({
                             width: 800,
                             height: 600
                         });
                         popup.open('http://en.wikipedia.org/wiki/' + c.name, 'external', undefined);*/
-                        $.prettyPhoto.open('http://en.wikipedia.org/wiki/' + c.name + '?iframe=true&width=70%&height=70%');
+                        $.prettyPhoto.open('http://' + lang + '.wikipedia.org/wiki/' + c.name + '?iframe=true&width=70%&height=70%');
                         //window.open('http://en.wikipedia.org/wiki/' + c.name);
                     });
 
