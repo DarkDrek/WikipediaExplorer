@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Details</title>
+    <style>
+        .line {
+            fill: none;
+            stroke: steelblue;
+            stroke-width: 1.5px;
+        }
+
+        .axis--x text {
+            font: 10px sans-serif;
+        }
+
+        .axis--y text {
+            font: oblique 15px Georgia, serif;
+        }
+
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+    </style>
+</head>
+<body>
+<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="//marvl.infotech.monash.edu/webcola/cola.v3.min.js"></script>
+<script src="MediawikiJS.js"></script>
+<script src="chain.js"></script>
+
+<script>
+    var site = 'Otto von Kotzebue';
+    var mwjs = new MediaWikiJS('http://en.wikipedia.org', null, null);
+    mwjs.send({
+        action: 'query',
+        prop: 'revisions',
+        rvlimit: '150',
+        rvprop: 'size|ids',
+        titles: site
+    }, function (data) {
+        var pages = data.query.pages;
+        var revisions = pages[Object.keys(pages)[0]].revisions;
+
+        var margin = {top: 40.5, right: 40.5, bottom: 50.5, left: 100},
+                width = 960 - margin.left - margin.right,
+                height = 500 - margin.top - margin.bottom;
+
+        var getRevId = function (rev) {
+            return rev.revid;
+        };
+        var cnt = 0;
+        revisions.forEach(function (d) {
+            d.revid = cnt++
+        });
+
+        var x = d3.scale.pow()
+                .domain([d3.min(revisions, getRevId), d3.max(revisions, getRevId)])
+                .range([0, width]);
+
+        var getSize = function (rev) {
+            return rev.size;
+        };
+        var y = d3.scale.linear()
+                .domain([d3.min(revisions, getSize), d3.max(revisions, getSize)])
+                .range([height, 0]);
+
+        var xAxis = d3.svg.axis()
+                .scale(x)
+                .orient("bottom")
+                .tickFormat(function (d) {
+                    return -d;
+                });
+
+        var yAxis = d3.svg.axis()
+                .scale(y)
+                .orient("left");
+
+        var line = d3.svg.line()
+                .interpolate("step-before")
+                .x(function (d) {
+                    return x(d.revid);
+                })
+                .y(function (d) {
+                    return y(d.size);
+                });
+
+        var svg = d3.select("body").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        svg.selectAll("dot")
+                .data(revisions)
+                .enter().append("circle")
+                .attr("r", 3.5)
+                .attr("cx", function (d) {
+                    return x(d.revid);
+                })
+                .attr("cy", function (d) {
+                    return y(d.size);
+                });
+
+        svg.append("g")
+                .attr("class", "axis axis--y")
+                .attr("transform", "translate(-10,0)")
+                .call(yAxis);
+
+        svg.append("g")
+                .attr("class", "axis axis--x")
+                .attr("transform", "translate(0," + (height + 10) + ")")
+                .call(xAxis);
+
+        svg.append("path")
+                .datum(revisions)
+                .attr("class", "line")
+                .attr("d", line);
+    });
+</script>
+
+</body>
+</html>
