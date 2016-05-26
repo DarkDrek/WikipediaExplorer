@@ -38,8 +38,8 @@
     mwjs.send({
         action: 'query',
         prop: 'revisions',
-        rvlimit: '150',
-        rvprop: 'size|ids',
+        rvlimit: '70',
+        rvprop: 'size|ids|flags|timestamp',
         titles: site
     }, function (data) {
         var pages = data.query.pages;
@@ -50,16 +50,21 @@
                 height = 500 - margin.top - margin.bottom;
 
         var getRevId = function (rev) {
-            return rev.revid;
+            return d3.time.format.iso.parse(rev.timestamp);
         };
-        var cnt = 0;
+        /*var cnt = 0;
         revisions.forEach(function (d) {
             d.revid = cnt++
-        });
+         });*/
 
-        var x = d3.scale.pow()
+        var x = /*d3.scale.linear()
                 .domain([d3.min(revisions, getRevId), d3.max(revisions, getRevId)])
-                .range([0, width]);
+                 .range([0, width]);*/
+                        d3.time.scale.utc()
+                                .domain([d3.min(revisions, getRevId), d3.max(revisions, getRevId)])
+                                .range([0, width])
+                                .nice(d3.time.month.utc, 3)
+                ;
 
         var getSize = function (rev) {
             return rev.size;
@@ -71,18 +76,16 @@
         var xAxis = d3.svg.axis()
                 .scale(x)
                 .orient("bottom")
-                .tickFormat(function (d) {
-                    return -d;
-                });
+                .ticks(d3.time.month.utc, 3);
 
         var yAxis = d3.svg.axis()
                 .scale(y)
                 .orient("left");
 
         var line = d3.svg.line()
-                .interpolate("step-before")
+                //.interpolate("step-after")
                 .x(function (d) {
-                    return x(d.revid);
+                    return x(getRevId(d));
                 })
                 .y(function (d) {
                     return y(d.size);
@@ -94,12 +97,20 @@
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+        svg.append("text")
+                .attr("x", width / 2)
+                .attr("y", 0)
+                .text(site)
+                .attr("font-family", "sans-serif")
+                .attr("font-size", "20px")
+                .attr("fill", "red");
+
         svg.selectAll("dot")
                 .data(revisions)
                 .enter().append("circle")
                 .attr("r", 3.5)
                 .attr("cx", function (d) {
-                    return x(d.revid);
+                    return x(getRevId(d));
                 })
                 .attr("cy", function (d) {
                     return y(d.size);
