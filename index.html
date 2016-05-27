@@ -1,62 +1,21 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <head>
-    <style>
-
-        .link {
-            fill: none;
-            stroke: #666;
-            stroke-width: 1.5px;
-        }
-
-        #licensing {
-            fill: green;
-        }
-
-        .link.licensing {
-            stroke: green;
-        }
-
-        .link.resolved {
-            stroke-dasharray: 0, 2 1;
-        }
-
-        circle {
-            fill: #ccc;
-            stroke: #333;
-            stroke-width: 1.5px;
-        }
-
-        text {
-            font: 10px sans-serif;
-            pointer-events: none;
-            text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
-        }
-
-        #txtSearch{
-            float: right;
-            position: absolute;
-            top: 5px;
-            right: 5px;
-        }
-
-        #map{
-            border: 1px solid black;
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-        }
-
-    </style>
     <link rel="stylesheet" href="css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8" />
+    <link rel="stylesheet" href="css.css" type="text/css" media="screen" charset="utf-8" />
 </head>
 <body>
+<!-- libs -->
 <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script src="//marvl.infotech.monash.edu/webcola/cola.v3.min.js"></script>
 <script src="MediawikiJS.js"></script>
 <script src="chain.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script src="js/jquery.prettyPhoto.js" type="text/javascript" charset="utf-8"></script>
+<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+<!-- own scripts -->
+<script src="wikiExplorer.js" charset="utf-8"></script>
 
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
@@ -67,7 +26,13 @@
 </script>
 
 <script>
+    var api = new WikipediaExplorerAPI("de");
+    api.getRandom(function (data) {
+        console.log(data);
+    });
+
     var lang = "en";
+
     var node_sizes = {min:Number.MAX_VALUE, max:Number.MIN_VALUE};
 
     var mwjs = new MediaWikiJS('http://' + lang + '.wikipedia.org', null, null);
@@ -96,7 +61,7 @@
         //titles: 'Gmina Tolkmicko',
         generator: 'random',
         grnnamespace: '0'
-    }, function (data) { console.log(data);
+    }, function (data) {
         var links = linksFromData(data);
         var chainArray = [function (data, next) {
             next(links)
@@ -140,9 +105,9 @@
                     .links(result)
                     .size([width, height])
                     .avoidOverlaps(true)
-                    .symmetricDiffLinkLengths(100, 1.7)
+                    .symmetricDiffLinkLengths(100, 1.7);/*
                     .on("tick", tick)
-                    .start();
+                    .start();*/
 
             var svg = d3.select("body").append("svg")
                     .attr("width", width)
