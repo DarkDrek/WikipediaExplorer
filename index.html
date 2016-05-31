@@ -1,24 +1,23 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <head>
-    <link rel="stylesheet" href="css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8" />
-    <link rel="stylesheet" href="css.css" type="text/css" media="screen" charset="utf-8" />
+    <link rel="stylesheet" href="css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8"/>
+    <link rel="stylesheet" href="css.css" type="text/css" media="screen" charset="utf-8"/>
 </head>
 <body>
 <!-- libs -->
-<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="d3.v3.js" charset="utf-8"></script>
 <script src="//marvl.infotech.monash.edu/webcola/cola.v3.min.js"></script>
 <script src="MediawikiJS.js"></script>
 <script src="chain.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script src="js/jquery.prettyPhoto.js" type="text/javascript" charset="utf-8"></script>
-<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 
 <!-- own scripts -->
 <script src="wikiExplorer.js" charset="utf-8"></script>
 
 <script type="text/javascript" charset="utf-8">
-    $(document).ready(function(){
+    $(document).ready(function () {
         $("a[rel^='prettyPhoto']").prettyPhoto({
             social_tools: false
         });
@@ -26,167 +25,187 @@
 </script>
 
 <script>
-    var api = new WikipediaExplorerAPI("de");
-    api.getRandom(function (data) {
-        console.log(data);
-    });
-
     var lang = "en";
 
-    var node_sizes = {min:Number.MAX_VALUE, max:Number.MIN_VALUE};
+    var api = new WikipediaExplorerAPI(lang);
+    api.getRandom(function (data) {
+        var scaleSize, scaleLinksCount;
+        initScales();
 
-    var mwjs = new MediaWikiJS('http://' + lang + '.wikipedia.org', null, null);
-    var linksFromData = function (data) {
-        var pages = data.query.pages;
-        var Links = pages[Object.keys(pages)[0]].links.map(function (obj) {
-                    return obj.title;
-                }
-        );
 
-        return Links.map(function (link) {
-            return {
-                source: pages[Object.keys(pages)[0]].title,
-                target: link,
-                type: "suit",
-                source_size: pages[Object.keys(pages)[0]].revisions[0].size
-            };
+        var width = window.innerWidth * 0.9, height = window.innerHeight * 0.9;
+
+        var nodes = d3.values(data.nodes);
+        nodes.map(function (n) {
+            n.finsihed = false;
         });
-    };
+        var links = data.links;
 
-    mwjs.send({
-        action: 'query',
-        prop:  'links|revisions',
-        rvprop: 'size',
-        pllimit: '5',
-        //titles: 'Gmina Tolkmicko',
-        generator: 'random',
-        grnnamespace: '0'
-    }, function (data) {
-        var links = linksFromData(data);
-        var chainArray = [function (data, next) {
-            next(links)
-        }];
+        var force = cola.d3adaptor() /*d3.layout.force()*/
+                .nodes(nodes)
+                .links(links)
+                .size([width, height])
+                .avoidOverlaps(true)
+                .symmetricDiffLinkLengths(100, 1.7)
+                /*
+                .linkStrength(0.1)
+                .friction(0.9)
+                .linkDistance(20)
+                .charge(-30)
+                .gravity(0.1)
+                .theta(0.8)
+                .alpha(0.1)*/
+                .on("tick", tick)
+                .start();
 
-        links.forEach(function (element, index, array) {
-                    chainArray.push(function (data, next) {
-                        mwjs.send({
-                            action: 'query',
-                            prop: 'links|revisions',
-                            rvprop: 'size',
-                            pllimit: '10',
-                            titles: element.target
-                        }, function (siteData) {
-                            var links = linksFromData(siteData);
-                            next(data.concat(links));
-                        });
-                    });
-                }
-        );
+        var svg = d3.select("body").append("svg")
+                .attr("width", width)
+                .attr("height", height);
 
-        chainArray.push(function (result, api) {
+        // Per-type markers, as they don't inherit styles.
 
-            var nodes = {};
+        var marker = svg.append("defs").selectAll("marker")
+                .data(force.links())
+                .enter().append("marker")
+                .attr("id", function (n) {
+                    return "marker" + n.source.index + "_" + n.target.index;
+                })
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", markerRefX)
+                .attr("refY", -1.5)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("orient", "auto");
 
-            // Compute the distinct nodes from the links.
-            result.forEach(function (link) {
-                link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
-                link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
-                link.source.size = link.source_size;
-                node_sizes.max = Math.max(node_sizes.max, link.source.size );
-                node_sizes.min = Math.min(node_sizes.min, link.source.size );
+        marker.append("path").attr("d", "M0,-5L10,0L0,5");
+
+
+        var path = svg.append("g").selectAll("path")
+                .data(force.links())
+                .enter().append("path")
+                .attr("class", "link")
+                .attr("marker-end", function (n) {
+                    return "url(#marker" + n.source.index + "_" + n.target.index + ")";
+                });
+
+        var circle = svg.append("g").selectAll("circle")
+                .data(force.nodes())
+                .enter().append("circle")
+                .attr("r", circleRadius)
+                .style("stroke", "black")
+                .style("fill", circleFill)
+                .on('click', function (c) {
+                    $.prettyPhoto.open('http://' + lang + '.wikipedia.org/wiki/' + c.name + '?iframe=true&width=70%&height=70%');
+                })
+                .on('mouseover', function (c) {
+                    c.selected = true;
+                    c.showText = true;
+                    mousemover();
+                })
+                .on('mouseout', function (c) {
+                    c.selected = false;
+                    c.showText = false;
+                    mousemover();
+                })
+                .call(force.drag);
+
+        var text = svg.append("g").selectAll("text")
+                .data(force.nodes())
+                .enter().append("text")
+                .attr("x", textX)
+                .attr("y", ".31em");
+
+        // Use elliptical arc path segments to doubly-encode directionality.
+        function tick() {
+            path.attr("d", linkArc);
+            marker.attr("refX", markerRefX);
+            circle.attr("transform", transform);
+            circle.style("fill", circleFill);
+            circle.attr("r", circleRadius);
+            text.attr("transform", transform);
+            text.attr("x", textX);
+        }
+
+        function mousemover() {
+            text.text(function (d) {
+                return d.showText ? d.name : "";
             });
+            circle.attr("class", function (d) {
+                if (d.selected) {
+                    return "shadow";
+                }
+                return "";
+            })
+        }
 
-            var scale = d3.scale.log().domain([1,node_sizes.max]).range([6,18]);
+        function linkArc(d) {
+            var dx = d.target.x - d.source.x,
+                    dy = d.target.y - d.source.y,
+                    dr = Math.sqrt(dx * dx + dy * dy);
+            return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+        }
 
-            var width = window.innerWidth * 0.9, height = window.innerHeight * 0.9;
+        function transform(d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        }
 
-            var force = cola.d3adaptor()
-                    .nodes(d3.values(nodes))
-                    .links(result)
-                    .size([width, height])
-                    .avoidOverlaps(true)
-                    .symmetricDiffLinkLengths(100, 1.7);/*
-                    .on("tick", tick)
-                    .start();*/
+        function initScales() {
+            scaleSize = d3.scale.log().domain([1, data.size.max]).range([6, 24]);
+            scaleLinksCount = d3.scale.linear().domain([data.linkscount.min, data.linkscount.max]).range(["yellow", "red"]).interpolate(d3.interpolateRgb);
+        }
 
-            var svg = d3.select("body").append("svg")
-                    .attr("width", width)
-                    .attr("height", height);
-
-            // Per-type markers, as they don't inherit styles.
-            svg.append("defs").selectAll("marker")
-                    .data(["suit", "licensing", "resolved"])
-                    .enter().append("marker")
-                    .attr("id", function (d) {
-                        return d;
-                    })
-                    .attr("viewBox", "0 -5 10 10")
-                    .attr("refX", 15)
-                    .attr("refY", -1.5)
-                    .attr("markerWidth", 6)
-                    .attr("markerHeight", 6)
-                    .attr("orient", "auto")
-                    .append("path")
-                    .attr("d", "M0,-5L10,0L0,5");
-
-            var path = svg.append("g").selectAll("path")
-                    .data(force.links())
-                    .enter().append("path")
-                    .attr("class", function (d) {
-                        return "link " + d.type;
-                    })
-                    .attr("marker-end", function (d) {
-                        return "url(#" + d.type + ")";
-                    });
-
-            var circle = svg.append("g").selectAll("circle")
-                    .data(force.nodes())
-                    .enter().append("circle")
-                    .attr("r", function (d) {
-                        if(d.size != undefined){
-                            return scale(d.size);
-                        }
-                        return 6;
-                    })
-                    .on('click', function (c) {
-                        /*var popup = new $.Popup({
-                            width: 800,
-                            height: 600
-                        });
-                        popup.open('http://en.wikipedia.org/wiki/' + c.name, 'external', undefined);*/
-                        $.prettyPhoto.open('http://' + lang + '.wikipedia.org/wiki/' + c.name + '?iframe=true&width=70%&height=70%');
-                        //window.open('http://en.wikipedia.org/wiki/' + c.name);
-                    });
-
-            var text = svg.append("g").selectAll("text")
-                    .data(force.nodes())
-                    .enter().append("text")
-                    .attr("x", 8)
-                    .attr("y", ".31em")
-                    .text(function (d) {
-                        return d.name;
-                    });
-
-            // Use elliptical arc path segments to doubly-encode directionality.
-            function tick() {
-                path.attr("d", linkArc);
-                circle.attr("transform", transform);
-                text.attr("transform", transform);
+        function textX(c) {
+            if (typeof c.size !== 'undefined') {
+                return scaleSize(Math.max(1, c.size)) + 2;
             }
+            return 8;
+        }
 
-            function linkArc(d) {
-                var dx = d.target.x - d.source.x,
-                        dy = d.target.y - d.source.y,
-                        dr = Math.sqrt(dx * dx + dy * dy);
-                return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+        function circleFill(c) {
+            if (c.size > 0) {
+                return scaleLinksCount(c.linkscount);
             }
+            return "hellgray";
+        }
 
-            function transform(d) {
-                return "translate(" + d.x + "," + d.y + ")";
+        function circleRadius(c) {
+            if (c.size != undefined && c.size > 0) {
+                return scaleSize(c.size)
             }
-        });
-        Chain().apply(null, chainArray);
-    });
+            return 6;
+        }
+
+        function markerRefX(l) {
+            if (l.target.size) {
+                return 11 + scaleSize(l.target.size);
+            }
+            return 15;
+        }
+
+        function resumeLoad() {
+            force.nodes().forEach(function (n) {
+                api.byName(n.name, function (d) {
+                    data.size.max = Math.max(data.size.max, d.size.max);
+                    data.size.min = Math.min(data.size.min, d.size.min);
+
+                    data.linkscount.min = Math.min(data.linkscount.min, d.linkscount.min);
+                    data.linkscount.max = Math.max(data.linkscount.max, d.linkscount.max);
+
+                    n.linkscount = d.nodes[n.name].linkscount;
+                    n.finsihed = d.nodes[n.name].finsihed;
+                    n.size = d.nodes[n.name].size;
+                    n.categories = d.nodes[n.name].categories;
+                    n.available = d.nodes[n.name].available;
+
+                    initScales();
+                    tick();
+                });
+            });
+        }
+
+        resumeLoad();
+
+    }, 7);
 
     // overview statistic
     var svg_map = d3.select("body").append("svg").attr("width", 300).attr("height", 300).attr("id", "map");

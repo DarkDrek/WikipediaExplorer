@@ -4,18 +4,6 @@
     stroke-width: 1.5px;
 }
 
-#licensing {
-    fill: green;
-}
-
-.link.licensing {
-    stroke: green;
-}
-
-.link.resolved {
-    stroke-dasharray: 0, 2 1;
-}
-
 circle {
     fill: #ccc;
     stroke: #333;
@@ -40,4 +28,10 @@ text {
     position: absolute;
     bottom: 5px;
     right: 5px;
+}
+
+circle.shadow{
+    -webkit-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+    -moz-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+    box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
 }

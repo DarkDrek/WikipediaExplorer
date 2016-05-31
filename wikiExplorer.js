@@ -8,18 +8,18 @@ function WikipediaExplorerAPI(lang) {
     this.mediaWikiJS = new MediaWikiJS('http://' + this.lang + '.wikipedia.org', null, null);
     this.random = {
         action: 'query',
-        prop: 'links|revisions',
+        prop: 'links|revisions|categories|langlinks',
         rvprop: 'size',
-        pllimit: '500',
+        plnamespace: '0',
         grnnamespace: '0',
         generator: 'random'
     };
 
     this.name = {
         action: 'query',
-        prop: 'links|revisions',
+        prop: 'links|revisions|categories|langlinks',
         rvprop: 'size',
-        pllimit: '500',
+        plnamespace: '0',
         titles: ''
     };
 }
@@ -29,44 +29,102 @@ WikipediaExplorerAPI.prototype.setLang = function (lang) {
     this.lang = lang;
 };
 
-WikipediaExplorerAPI.prototype.convertData = function (data) {
+WikipediaExplorerAPI.prototype.convertData = function (data, available) {
     "use strict";
-    var d = {nodes: [], links: []};
+    var d = available || {
+            nodes: {},
+            links: [],
+            size: {min: Number.MAX_VALUE, max: Number.MIN_VALUE},
+            linkscount: {min: Number.MAX_VALUE, max: Number.MIN_VALUE}
+        };
     var page = data.query.pages[Object.keys(data.query.pages)[0]];
     var main = {
-        index: page.title,
-        title: page.title,
-        size: page.links.length
+        id: page.title,
+        name: page.title,
+        available: page.missing ? false : true,
+        linkscount: (page.links || []).length,
+        size: (typeof page.missing !== 'undefined') ? 0 : page.revisions[0].size,
+        categories: (page.categories || []).map(function (d) {
+            return d.title.replace("Category:", "");
+        }),
+        finsihed: true
     };
-    d.nodes.push(main);
 
-    page.links.forEach(function (link) {
-        d.nodes.push({
-            index: link.title,
-            title: link.title
-        });
+    d.linkscount.min = Math.min(d.linkscount.min, main.linkscount);
+    d.linkscount.max = Math.max(d.linkscount.max, main.linkscount);
+
+    d.size.min = Math.min(d.size.min, main.size);
+    d.size.max = Math.max(d.size.max, main.size);
+
+    if (typeof d.nodes[main.id] !== 'undefined') {
+        d.nodes[main.id].available = main.available;
+        d.nodes[main.id].linkscount = main.linkscount;
+        d.nodes[main.id].size = main.size;
+        d.nodes[main.id].categories = main.categories;
+    } else {
+        d.nodes[main.id] = main;
+    }
+
+    (page.links || []).forEach(function (link) {
+        if (!d.nodes[link.title]) {
+            d.nodes[link.title] = {
+                id: link.title,
+                name: link.title
+            };
+        }
         d.links.push({
-            source: main.index,
-            target: link.title,
-            type: "suit"
+            source: d.nodes[main.id],
+            target: d.nodes[link.title],
         });
     });
     return d;
 };
 
-WikipediaExplorerAPI.prototype.getRandom = function (func) {
+WikipediaExplorerAPI.prototype.getRandom = function (func, limit) {
     "use strict";
-    func = func || function () { };
+    func = func || function () {
+        };
+    limit = limit || 500;
     var wep = this;
-    this._load(wep.random, function (data) {
-        func(wep.convertData(data));
+
+    var optins = wep.random;
+    optins.pllimit = limit;
+    optins.cllimit = limit;
+    optins.lllimit = limit;
+
+    this._load(optins, function (data) {
+        var d = wep.convertData(data);
+
+        var chainArray = [function (nodes, next) {
+            next(d);
+        }];
+
+        $.each(d.nodes, function (key, value) {
+            if (!value.finsihed) {
+                chainArray.push(function (nodeslinks, next) {
+                    var o = wep.name;
+                    o.titles = key;
+                    o.pllimit = limit;
+                    o.cllimit = limit;
+                    o.lllimit = limit;
+                    wep._load(o, function (response) {
+                        next(wep.convertData(response, nodeslinks));
+                    });
+                });
+            }
+        });
+
+        chainArray.push(function (nodeslinks, next) {
+            func(nodeslinks);
+        });
+        Chain().apply(null, chainArray);
     });
 };
 
 
 WikipediaExplorerAPI.prototype._load = function (options, func) {
     this.mediaWikiJS.send(options, function (d) {
-        console.log("_load",d);
+        //console.log("_load", d);
         if (typeof d.warnings !== 'undefined') {
             console.error(d.warnings.main);
             throw d.warnings.main;
@@ -76,13 +134,18 @@ WikipediaExplorerAPI.prototype._load = function (options, func) {
     });
 };
 
-
-WikipediaExplorerAPI.prototype.getByTitle = function (title, options, func) {
-    "use strict";
-    func = func || function () { };
+WikipediaExplorerAPI.prototype.byName = function (name, func) {
+    func = func || function () {
+        };
+    var limit = 500;
     var wep = this;
-    var o = wep.name; o.titles = title;
+    var o = wep.name;
+    o.pllimit = limit;
+    o.cllimit = limit;
+    o.lllimit = limit;
+    o.titles = name;
     this._load(o, function (data) {
-        func(wep.convertData(data));
+        var d = wep.convertData(data);
+        func(d);
     });
 };
