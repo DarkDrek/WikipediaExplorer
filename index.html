@@ -1,65 +1,27 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <head>
-    <style>
-
-        .link {
-            fill: none;
-            stroke: #666;
-            stroke-width: 1.5px;
-        }
-
-        #licensing {
-            fill: green;
-        }
-
-        .link.licensing {
-            stroke: green;
-        }
-
-        .link.resolved {
-            stroke-dasharray: 0, 2 1;
-        }
-
-        circle {
-            fill: #ccc;
-            stroke: #333;
-            stroke-width: 1.5px;
-        }
-
-        text {
-            font: 10px sans-serif;
-            pointer-events: none;
-            text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
-        }
-
-        #txtSearch{
-            float: right;
-            position: absolute;
-            top: 5px;
-            right: 5px;
-        }
-
-        #map{
-            border: 1px solid black;
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-        }
-
-    </style>
-    <link rel="stylesheet" href="css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8" />
+    <link rel="stylesheet" href="css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8"/>
+    <link rel="stylesheet" href="css.css" type="text/css" media="screen" charset="utf-8"/>
 </head>
 <body>
-<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<!-- libs -->
+<script src="js/d3.v3.js" charset="utf-8"></script>
+<script src="js/box.js" charset="utf-8"></script>
 <script src="//marvl.infotech.monash.edu/webcola/cola.v3.min.js"></script>
 <script src="MediawikiJS.js"></script>
-<script src="chain.js"></script>
+<script src="js/chain.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script src="js/jquery.prettyPhoto.js" type="text/javascript" charset="utf-8"></script>
 
+<!-- own scripts -->
+<script src="wikiExplorer.js" charset="utf-8"></script>
+<script src="graph.js" charset="utf-8"></script>
+<script src="overviewStatistics.js"></script>
+<script src="linksStatistics.js" charset="UTF-8"></script>
+
 <script type="text/javascript" charset="utf-8">
-    $(document).ready(function(){
+    $(document).ready(function () {
         $("a[rel^='prettyPhoto']").prettyPhoto({
             social_tools: false
         });
@@ -68,168 +30,143 @@
 
 <script>
     var lang = "en";
-    var node_sizes = {min:Number.MAX_VALUE, max:Number.MIN_VALUE};
+    var scaleSize, scaleLinksCount, data;
+    var api = new WikipediaExplorerAPI(lang);
 
-    var mwjs = new MediaWikiJS('http://' + lang + '.wikipedia.org', null, null);
-    var linksFromData = function (data) {
-        var pages = data.query.pages;
-        var Links = pages[Object.keys(pages)[0]].links.map(function (obj) {
-                    return obj.title;
+    function tick() {
+        path.attr("d", linkArc);
+        marker.attr("refX", markerRefX);
+        circle.attr("transform", transform);
+        circle.style("fill", circleFill);
+        circle.attr("r", circleRadius);
+        text.attr("transform", transform);
+        text.attr("x", textX);
+        links_max.text(linksMaxText);
+        links_min.text(linksMinText);
+        links_average.text(linksAverageText);
+        s();
+    }
+
+    overview();
+
+    api.getRandom(function (d) {
+        data = d;
+        initScales();
+        graph();
+    }, 7);
+
+    var margin = {top: 30, right: 50, bottom: 70, left: 50};
+    var width = 300 - margin.left - margin.right;
+    var height = 300 - margin.top - margin.bottom;
+    var labels = true;
+
+    var min = Infinity, max = -Infinity;
+    var bd = [[]];
+    bd[0][0] = "Links";
+    bd[0][1] = [];
+
+    var chart = d3.box()
+            .whiskers(iqr(1.5))
+            .height(height)
+            .domain([min, max])
+            .showLabels(labels);
+
+    var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .attr("class", "box")
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // the x-axis
+    var x = d3.scale.ordinal()
+            .domain(bd.map(function (d) {
+                return d[0]
+            }))
+            .rangeRoundBands([0, width], 0.7, 0.3);
+
+    var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+
+    // the y-axis
+    var y = d3.scale.linear()
+            .domain([min, max])
+            .range([height + margin.top, 0 + margin.top]);
+
+    var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left");
+
+    // draw the boxplots
+    var box = svg.selectAll(".box")
+            .data(bd)
+            .enter().append("g")
+            .attr("transform", function (d) {
+                return "translate(" + x(d[0]) + "," + margin.top + ")";
+            })
+            .call(chart.width(x.rangeBand()));
+
+    // add a title
+    svg.append("text")
+            .attr("x", (width / 2))
+            .attr("y", 0 + (margin.top / 2))
+            .attr("text-anchor", "middle")
+            .style("font-size", "18px")
+            .text("Links");
+
+    // draw y axis
+    svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+            .append("text") // and text1
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .style("font-size", "16px")
+            .text("Links per Page");
+
+    // draw x axis
+    svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + (height + margin.top + 10) + ")")
+            .call(xAxis)
+            .append("text")             // text label for the x axis
+            .attr("x", (width / 2))
+            .attr("y", 10)
+            .attr("dy", ".71em")
+            .style("text-anchor", "middle")
+            .style("font-size", "16px")
+            .text("Links");
+
+    function s() {
+        bd[0][1] = [];
+
+        if (data) {
+            $.each(data.nodes, function (i, n) {
+                if (n.linkscount) {
+                    min = Math.min(min, n.linkscount);
+                    max = Math.max(max, n.linkscount);
+                    bd[0][1].push(n.linkscount);
                 }
-        );
-
-        return Links.map(function (link) {
-            return {
-                source: pages[Object.keys(pages)[0]].title,
-                target: link,
-                type: "suit",
-                source_size: pages[Object.keys(pages)[0]].revisions[0].size
-            };
-        });
-    };
-
-    mwjs.send({
-        action: 'query',
-        prop:  'links|revisions',
-        rvprop: 'size',
-        pllimit: '5',
-        //titles: 'Gmina Tolkmicko',
-        generator: 'random',
-        grnnamespace: '0'
-    }, function (data) { console.log(data);
-        var links = linksFromData(data);
-        var chainArray = [function (data, next) {
-            next(links)
-        }];
-
-        links.forEach(function (element, index, array) {
-                    chainArray.push(function (data, next) {
-                        mwjs.send({
-                            action: 'query',
-                            prop: 'links|revisions',
-                            rvprop: 'size',
-                            pllimit: '10',
-                            titles: element.target
-                        }, function (siteData) {
-                            var links = linksFromData(siteData);
-                            next(data.concat(links));
-                        });
-                    });
-                }
-        );
-
-        chainArray.push(function (result, api) {
-
-            var nodes = {};
-
-            // Compute the distinct nodes from the links.
-            result.forEach(function (link) {
-                link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
-                link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
-                link.source.size = link.source_size;
-                node_sizes.max = Math.max(node_sizes.max, link.source.size );
-                node_sizes.min = Math.min(node_sizes.min, link.source.size );
             });
+        }
 
-            var scale = d3.scale.log().domain([1,node_sizes.max]).range([6,18]);
+        chart.domain([min, max]);
 
-            var width = window.innerWidth * 0.9, height = window.innerHeight * 0.9;
+        x.domain(bd.map(function (d) {
+            return d[0]
+        }));
 
-            var force = cola.d3adaptor()
-                    .nodes(d3.values(nodes))
-                    .links(result)
-                    .size([width, height])
-                    .avoidOverlaps(true)
-                    .symmetricDiffLinkLengths(100, 1.7)
-                    .on("tick", tick)
-                    .start();
+        y.domain([min, max]);
 
-            var svg = d3.select("body").append("svg")
-                    .attr("width", width)
-                    .attr("height", height);
-
-            // Per-type markers, as they don't inherit styles.
-            svg.append("defs").selectAll("marker")
-                    .data(["suit", "licensing", "resolved"])
-                    .enter().append("marker")
-                    .attr("id", function (d) {
-                        return d;
-                    })
-                    .attr("viewBox", "0 -5 10 10")
-                    .attr("refX", 15)
-                    .attr("refY", -1.5)
-                    .attr("markerWidth", 6)
-                    .attr("markerHeight", 6)
-                    .attr("orient", "auto")
-                    .append("path")
-                    .attr("d", "M0,-5L10,0L0,5");
-
-            var path = svg.append("g").selectAll("path")
-                    .data(force.links())
-                    .enter().append("path")
-                    .attr("class", function (d) {
-                        return "link " + d.type;
-                    })
-                    .attr("marker-end", function (d) {
-                        return "url(#" + d.type + ")";
-                    });
-
-            var circle = svg.append("g").selectAll("circle")
-                    .data(force.nodes())
-                    .enter().append("circle")
-                    .attr("r", function (d) {
-                        if(d.size != undefined){
-                            return scale(d.size);
-                        }
-                        return 6;
-                    })
-                    .on('click', function (c) {
-                        /*var popup = new $.Popup({
-                            width: 800,
-                            height: 600
-                        });
-                        popup.open('http://en.wikipedia.org/wiki/' + c.name, 'external', undefined);*/
-                        $.prettyPhoto.open('http://' + lang + '.wikipedia.org/wiki/' + c.name + '?iframe=true&width=70%&height=70%');
-                        //window.open('http://en.wikipedia.org/wiki/' + c.name);
-                    });
-
-            var text = svg.append("g").selectAll("text")
-                    .data(force.nodes())
-                    .enter().append("text")
-                    .attr("x", 8)
-                    .attr("y", ".31em")
-                    .text(function (d) {
-                        return d.name;
-                    });
-
-            // Use elliptical arc path segments to doubly-encode directionality.
-            function tick() {
-                path.attr("d", linkArc);
-                circle.attr("transform", transform);
-                text.attr("transform", transform);
-            }
-
-            function linkArc(d) {
-                var dx = d.target.x - d.source.x,
-                        dy = d.target.y - d.source.y,
-                        dr = Math.sqrt(dx * dx + dy * dy);
-                return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
-            }
-
-            function transform(d) {
-                return "translate(" + d.x + "," + d.y + ")";
-            }
-        });
-        Chain().apply(null, chainArray);
-    });
-
-    // overview statistic
-    var svg_map = d3.select("body").append("svg").attr("width", 300).attr("height", 300).attr("id", "map");
-    var average = svg_map.append("g");
-    average.append("text").text("average links:").attr("x", 0).attr("y", 10);
-    average.append("text").text("147").attr("x", 70).attr("y", 10);
-
+        box.data(bd);
+        //box.call(chart.width(x.rangeBand()));
+        box.call(chart.duration(1000));
+    }
 </script>
+
 
 <input type="text" placeholder="search..." id="txtSearch">
 </body>
