@@ -15,9 +15,6 @@ function revisionsLine(site, callback) {
             return typeof d.minor === 'undefined';
         });
 
-        // Sprache aktuelle Rev. zu Größe als Balken
-        // Seiten IFrame
-
         var marginLine = {top: 40.5, right: 40.5, bottom: 50.5, left: 100},
             widthLine = 960 - marginLine.left - marginLine.right,
             heightLine = 500 - marginLine.top - marginLine.bottom;
@@ -57,7 +54,7 @@ function revisionsLine(site, callback) {
                 return y(d.size);
             });
 
-        var svg = d3.select("body").append("svg")
+        var svg = d3.select("body").insert("svg", "svg")
             .attr("width", widthLine + marginLine.left + marginLine.right)
             .attr("height", heightLine + marginLine.top + marginLine.bottom)
             .append("g")
@@ -97,7 +94,8 @@ function revisionsLine(site, callback) {
             .attr("class", "line")
             .attr("d", line);
 
-        callback(pages[Object.keys(pages)[0]].langlinks);
+        if (callback)
+            callback(pages[Object.keys(pages)[0]].langlinks);
     });
 }
 
@@ -176,11 +174,24 @@ function languagesBars(langlinks) {
                     return height - yBar(d.size);
                 })
                 .on('click', function (d) {
-                    '';
+                    d3.select('svg').remove();
+                    revisionsLine('test');
                 });
         });
 }
 
-revisionsLine('Otto von Kotzebue', function (langlinks) {
+function getQueryVariable(variable) {
+    var query = window.location.search.substring(1);
+    var vars = query.split('&');
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split('=');
+        if (decodeURIComponent(pair[0]) == variable) {
+            return decodeURIComponent(pair[1]);
+        }
+    }
+    console.log('Query variable %s not found', variable);
+}
+
+revisionsLine(getQueryVariable('site'), function (langlinks) {
     languagesBars(langlinks);
 });

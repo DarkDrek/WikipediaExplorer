@@ -69,7 +69,7 @@ function graph() {
         .style("stroke", "black")
         .style("fill", circleFill)
         .on('click', function (c) {
-            $.prettyPhoto.open('http://' + lang + '.wikipedia.org/wiki/' + c.name + '?iframe=true&width=70%&height=70%');
+            $.prettyPhoto.open('detail.html?site=' + c.name + '&iframe=true&width=70%&height=70%');
         })
         .on('mouseover', function (c) {
             c.selected = true;
