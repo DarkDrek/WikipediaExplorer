@@ -16,60 +16,22 @@ text {
     text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
 
-#txtSearch{
+#txtSearch {
     float: right;
     position: absolute;
     top: 5px;
     right: 5px;
 }
 
-#map{
+#map {
     border: 1px solid black;
     position: absolute;
     bottom: 5px;
     right: 5px;
 }
 
-circle.shadow{
-    -webkit-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
-    -moz-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
-    box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
-}
-
-.box {
-    font: 10px sans-serif;
-}
-
-.box line,
-.box rect,
-.box circle {
-    fill: steelblue;
-    stroke: #000;
-    stroke-width: 1px;
-}
-
-.box .center {
-    stroke-dasharray: 3,3;
-}
-
-.box .outlier {
+#graph g.axis path{
     fill: none;
-    stroke: #000;
-}
-
-.axis {
-    font: 12px sans-serif;
-}
-
-.axis path,
-.axis line {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
-}
-
-.x.axis path {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
+    stroke: #666;
+    stroke-width: 1.5px;
 }

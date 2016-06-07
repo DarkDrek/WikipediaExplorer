@@ -85,12 +85,12 @@
 								<a href="#" class="pp_arrow_next">Next</a> \
 							</div>',
 			image_markup: '<img id="fullResImage" src="{path}" />',
-			flash_markup: '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="{width}" height="{height}"><param name="wmode" value="{wmode}" /><param name="allowfullscreen" value="true" /><param name="allowscriptaccess" value="always" /><param name="movie" value="{path}" /><embed src="{path}" type="application/x-shockwave-flash" allowfullscreen="true" allowscriptaccess="always" width="{width}" height="{height}" wmode="{wmode}"></embed></object>',
-			quicktime_markup: '<object classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" codebase="http://www.apple.com/qtactivex/qtplugin.cab" height="{height}" width="{width}"><param name="src" value="{path}"><param name="autoplay" value="{autoplay}"><param name="type" value="video/quicktime"><embed src="{path}" height="{height}" width="{width}" autoplay="{autoplay}" type="video/quicktime" pluginspage="http://www.apple.com/quicktime/download/"></embed></object>',
-			iframe_markup: '<iframe src ="{path}" width="{width}" height="{height}" frameborder="no"></iframe>',
+			flash_markup: '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" rss_width="{rss_width}" rss_height="{rss_height}"><param name="wmode" value="{wmode}" /><param name="allowfullscreen" value="true" /><param name="allowscriptaccess" value="always" /><param name="movie" value="{path}" /><embed src="{path}" type="application/ls_x-shockwave-flash" allowfullscreen="true" allowscriptaccess="always" rss_width="{rss_width}" rss_height="{rss_height}" wmode="{wmode}"></embed></object>',
+			quicktime_markup: '<object classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" codebase="http://www.apple.com/qtactivex/qtplugin.cab" rss_height="{rss_height}" rss_width="{rss_width}"><param name="src" value="{path}"><param name="autoplay" value="{autoplay}"><param name="type" value="video/quicktime"><embed src="{path}" rss_height="{rss_height}" rss_width="{rss_width}" autoplay="{autoplay}" type="video/quicktime" pluginspage="http://www.apple.com/quicktime/download/"></embed></object>',
+			iframe_markup: '<iframe src ="{path}" rss_width="{rss_width}" rss_height="{rss_height}" frameborder="no"></iframe>',
 			inline_markup: '<div class="pp_inline">{content}</div>',
 			custom_markup: '',
-			social_tools: '<div class="twitter"><a href="http://twitter.com/share" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script></div><div class="facebook"><iframe src="//www.facebook.com/plugins/like.php?locale=en_US&href={location_href}&amp;layout=button_count&amp;show_faces=true&amp;width=500&amp;action=like&amp;font&amp;colorscheme=light&amp;height=23" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:500px; height:23px;" allowTransparency="true"></iframe></div>' /* html or false to disable */
+			social_tools: '<div class="twitter"><a href="http://twitter.com/share" class="twitter-share-button" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script></div><div class="facebook"><iframe src="//www.facebook.com/plugins/like.php?locale=en_US&href={location_href}&amp;layout=button_count&amp;show_faces=true&amp;rss_width=500&amp;action=like&amp;font&amp;colorscheme=light&amp;rss_height=23" scrolling="no" frameborder="0" style="border:none; overflow:hidden; rss_width:500px; rss_height:23px;" allowTransparency="true"></iframe></div>' /* html or false to disable */
 		}, pp_settings);
 		
 		// Global variables accessible only by prettyPhoto
@@ -218,8 +218,8 @@
 			}
 			
 			// Get the dimensions
-			movie_width = ( parseFloat(getParam('width',pp_images[set_position])) ) ? getParam('width',pp_images[set_position]) : settings.default_width.toString();
-			movie_height = ( parseFloat(getParam('height',pp_images[set_position])) ) ? getParam('height',pp_images[set_position]) : settings.default_height.toString();
+			movie_width = ( parseFloat(getParam('rss_width',pp_images[set_position])) ) ? getParam('rss_width',pp_images[set_position]) : settings.default_width.toString();
+			movie_height = ( parseFloat(getParam('rss_height',pp_images[set_position])) ) ? getParam('rss_height',pp_images[set_position]) : settings.default_height.toString();
 			
 			// If the size is % based, calculate according to window dimensions
 			percentBased=false;
@@ -284,7 +284,7 @@
 							
 						if(settings.autoplay) movie += "&autoplay=1";
 					
-						toInject = settings.iframe_markup.replace(/{width}/g,pp_dimensions['width']).replace(/{height}/g,pp_dimensions['height']).replace(/{wmode}/g,settings.wmode).replace(/{path}/g,movie);
+						toInject = settings.iframe_markup.replace(/{width}/g,pp_dimensions['rss_width']).replace(/{height}/g,pp_dimensions['rss_height']).replace(/{wmode}/g,settings.wmode).replace(/{path}/g,movie);
 					break;
 				
 					case 'vimeo':
@@ -297,16 +297,16 @@
 						movie = 'http://player.vimeo.com/video/'+ match[3] +'?title=0&amp;byline=0&amp;portrait=0';
 						if(settings.autoplay) movie += "&autoplay=1;";
 				
-						vimeo_width = pp_dimensions['width'] + '/embed/?moog_width='+ pp_dimensions['width'];
+						vimeo_width = pp_dimensions['rss_width'] + '/embed/?moog_width='+ pp_dimensions['rss_width'];
 				
-						toInject = settings.iframe_markup.replace(/{width}/g,vimeo_width).replace(/{height}/g,pp_dimensions['height']).replace(/{path}/g,movie);
+						toInject = settings.iframe_markup.replace(/{width}/g,vimeo_width).replace(/{height}/g,pp_dimensions['rss_height']).replace(/{path}/g,movie);
 					break;
 				
 					case 'quicktime':
 						pp_dimensions = _fitToViewport(movie_width,movie_height); // Fit item to viewport
-						pp_dimensions['height']+=15; pp_dimensions['contentHeight']+=15; pp_dimensions['containerHeight']+=15; // Add space for the control bar
+						pp_dimensions['rss_height']+=15; pp_dimensions['contentHeight']+=15; pp_dimensions['containerHeight']+=15; // Add space for the control bar
 				
-						toInject = settings.quicktime_markup.replace(/{width}/g,pp_dimensions['width']).replace(/{height}/g,pp_dimensions['height']).replace(/{wmode}/g,settings.wmode).replace(/{path}/g,pp_images[set_position]).replace(/{autoplay}/g,settings.autoplay);
+						toInject = settings.quicktime_markup.replace(/{width}/g,pp_dimensions['rss_width']).replace(/{height}/g,pp_dimensions['rss_height']).replace(/{wmode}/g,settings.wmode).replace(/{path}/g,pp_images[set_position]).replace(/{autoplay}/g,settings.autoplay);
 					break;
 				
 					case 'flash':
@@ -318,7 +318,7 @@
 						filename = pp_images[set_position];
 						filename = filename.substring(0,filename.indexOf('?'));
 					
-						toInject =  settings.flash_markup.replace(/{width}/g,pp_dimensions['width']).replace(/{height}/g,pp_dimensions['height']).replace(/{wmode}/g,settings.wmode).replace(/{path}/g,filename+'?'+flash_vars);
+						toInject =  settings.flash_markup.replace(/{width}/g,pp_dimensions['rss_width']).replace(/{height}/g,pp_dimensions['rss_height']).replace(/{wmode}/g,settings.wmode).replace(/{path}/g,filename+'?'+flash_vars);
 					break;
 				
 					case 'iframe':
@@ -327,7 +327,7 @@
 						frame_url = pp_images[set_position];
 						frame_url = frame_url.substr(0,frame_url.indexOf('iframe')-1);
 
-						toInject = settings.iframe_markup.replace(/{width}/g,pp_dimensions['width']).replace(/{height}/g,pp_dimensions['height']).replace(/{path}/g,frame_url);
+						toInject = settings.iframe_markup.replace(/{width}/g,pp_dimensions['rss_width']).replace(/{height}/g,pp_dimensions['rss_height']).replace(/{path}/g,frame_url);
 					break;
 					
 					case 'ajax':
@@ -351,7 +351,7 @@
 					break;
 				
 					case 'inline':
-						// to get the item height clone it, apply default width, wrap it in the prettyPhoto containers , then delete
+						// to get the item rss_height clone it, apply default rss_width, wrap it in the prettyPhoto containers , then delete
 						myClone = $(pp_images[set_position]).clone().append('<br clear="all" />').css({'width':settings.default_width}).wrapInner('<div id="pp_full_res"><div class="pp_inline"></div></div>').appendTo($('body')).show();
 						doresize = false; // Make sure the dimensions are not resized.
 						pp_dimensions = _fitToViewport($(myClone).width(),$(myClone).height());
@@ -512,7 +512,7 @@
 				'left': ((windowWidth/2) - (pp_dimensions['containerWidth']/2) < 0) ? 0 : (windowWidth/2) - (pp_dimensions['containerWidth']/2),
 				width:pp_dimensions['containerWidth']
 			},settings.animation_speed,function(){
-				$pp_pic_holder.find('.pp_hoverContainer,#fullResImage').height(pp_dimensions['height']).width(pp_dimensions['width']);
+				$pp_pic_holder.find('.pp_hoverContainer,#fullResImage').height(pp_dimensions['rss_height']).width(pp_dimensions['rss_width']);
 
 				$pp_pic_holder.find('.pp_fade').fadeIn(settings.animation_speed); // Fade the new content
 
@@ -619,7 +619,7 @@
 			width = parseFloat(width);
 			height = parseFloat(height);
 			
-			// Get the details height, to do so, I need to clone it since it's invisible
+			// Get the details rss_height, to do so, I need to clone it since it's invisible
 			$pp_details = $pp_pic_holder.find('.pp_details');
 			$pp_details.width(width);
 			detailsHeight = parseFloat($pp_details.css('marginTop')) + parseFloat($pp_details.css('marginBottom'));
@@ -629,10 +629,10 @@
 				'top':-10000
 			});
 			detailsHeight += $pp_details.height();
-			detailsHeight = (detailsHeight <= 34) ? 36 : detailsHeight; // Min-height for the details
+			detailsHeight = (detailsHeight <= 34) ? 36 : detailsHeight; // Min-rss_height for the details
 			$pp_details.remove();
 			
-			// Get the titles height, to do so, I need to clone it since it's invisible
+			// Get the titles rss_height, to do so, I need to clone it since it's invisible
 			$pp_title = $pp_pic_holder.find('.ppt');
 			$pp_title.width(width);
 			titleHeight = parseFloat($pp_title.css('marginTop')) + parseFloat($pp_title.css('marginBottom'));
@@ -708,8 +708,8 @@
 	
 		function _insert_gallery(){
 			if(isSet && settings.overlay_gallery && _getFileType(pp_images[set_position])=="image") {
-				itemWidth = 52+5; // 52 beign the thumb width, 5 being the right margin.
-				navWidth = (settings.theme == "facebook" || settings.theme == "pp_default") ? 50 : 30; // Define the arrow width depending on the theme
+				itemWidth = 52+5; // 52 beign the thumb rss_width, 5 being the right rss_margin.
+				navWidth = (settings.theme == "facebook" || settings.theme == "pp_default") ? 50 : 30; // Define the arrow rss_width depending on the theme
 				
 				itemsPerPage = Math.floor((pp_dimensions['containerWidth'] - 100 - navWidth) / itemWidth);
 				itemsPerPage = (itemsPerPage < pp_images.length) ? itemsPerPage : pp_images.length;
@@ -717,7 +717,7 @@
 
 				// Hide the nav in the case there's no need for links
 				if(totalPage == 0){
-					navWidth = 0; // No nav means no width!
+					navWidth = 0; // No nav means no rss_width!
 					$pp_gallery.find('.pp_arrow_next,.pp_arrow_previous').hide();
 				}else{
 					$pp_gallery.find('.pp_arrow_next,.pp_arrow_previous').show();
@@ -726,9 +726,9 @@
 				galleryWidth = itemsPerPage * itemWidth;
 				fullGalleryWidth = pp_images.length * itemWidth;
 				
-				// Set the proper width to the gallery items
+				// Set the proper rss_width to the gallery items
 				$pp_gallery
-					.css('margin-left',-((galleryWidth/2) + (navWidth/2)))
+					.css('rss_margin-left',-((galleryWidth/2) + (navWidth/2)))
 					.find('div:first').width(galleryWidth+5)
 					.find('ul').width(fullGalleryWidth)
 					.find('li.selected').removeClass('selected');
@@ -767,7 +767,7 @@
 						classname = '';
 						img_src = pp_images[i];
 					}
-					toInject += "<li class='"+classname+"'><a href='#'><img src='" + img_src + "' width='50' alt='' /></a></li>";
+					toInject += "<li class='"+classname+"'><a href='#'><img src='" + img_src + "' rss_width='50' alt='' /></a></li>";
 				};
 				
 				toInject = settings.gallery_markup.replace(/{gallery}/g,toInject);
@@ -796,7 +796,7 @@
 						$pp_pic_holder.find('.pp_gallery:not(.disabled)').fadeOut();
 					});
 
-				itemWidth = 52+5; // 52 beign the thumb width, 5 being the right margin.
+				itemWidth = 52+5; // 52 beign the thumb rss_width, 5 being the right rss_margin.
 				$pp_gallery_li.each(function(i){
 					$(this)
 						.find('a')

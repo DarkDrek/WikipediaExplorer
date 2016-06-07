@@ -43,15 +43,15 @@
                     ? d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n))
                     : d3.range(n);
 
-                // Compute the new x-scale.
+                // Compute the new ls_x-scale.
                 var x1 = d3.scale.linear()
                     .domain(domain && domain.call(this, d, i) || [min, max])
                     .range([height, 0]);
 
-                // Retrieve the old x-scale, if this is an update.
+                // Retrieve the old ls_x-scale, if this is an update.
                 var x0 = this.__chart__ || d3.scale.linear()
                         .domain([0, Infinity])
-                        // .domain([0, max])
+                        // .domain([0, rss_max])
                         .range(x1.range());
 
                 // Stash the new scale.
@@ -99,7 +99,7 @@
 
                 box.enter().append("rect")
                     .attr("class", "box")
-                    .attr("x", 0)
+                    .attr("ls_x", 0)
                     .attr("y", function(d) { return x0(d[2]); })
                     .attr("width", width)
                     .attr("height", function(d) { return x0(d[0]) - x0(d[2]); })
@@ -200,7 +200,7 @@
                         .attr("class", "box")
                         .attr("dy", ".3em")
                         .attr("dx", function(d, i) { return i & 1 ? 6 : -6 })
-                        .attr("x", function(d, i) { return i & 1 ?  + width : 0 })
+                        .attr("ls_x", function(d, i) { return i & 1 ?  + width : 0 })
                         .attr("y", x0)
                         .attr("text-anchor", function(d, i) { return i & 1 ? "start" : "end"; })
                         .text(format)
@@ -224,7 +224,7 @@
                         .attr("class", "whisker")
                         .attr("dy", ".3em")
                         .attr("dx", 6)
-                        .attr("x", width)
+                        .attr("ls_x", width)
                         .attr("y", x0)
                         .text(format)
                         .style("opacity", 1e-6)

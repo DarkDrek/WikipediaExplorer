@@ -3,6 +3,7 @@
 <head>
     <link rel="stylesheet" href="css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8"/>
     <link rel="stylesheet" href="css.css" type="text/css" media="screen" charset="utf-8"/>
+    <link rel="stylesheet" href="css/box.css" type="text/css" media="screen" charset="utf-8"/>
 </head>
 <body>
 <!-- libs -->
@@ -18,7 +19,7 @@
 <script src="wikiExplorer.js" charset="utf-8"></script>
 <script src="graph.js" charset="utf-8"></script>
 <script src="overviewStatistics.js"></script>
-<script src="linksStatistics.js" charset="UTF-8"></script>
+<script src="boxPlot.js" charset="UTF-8"></script>
 
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function () {
@@ -29,6 +30,7 @@
 </script>
 
 <script>
+
     var lang = "en";
     var scaleSize, scaleLinksCount, data;
     var api = new WikipediaExplorerAPI(lang);
@@ -44,7 +46,7 @@
         links_max.text(linksMaxText);
         links_min.text(linksMinText);
         links_average.text(linksAverageText);
-        s();
+        //linksStatisicCallback();
     }
 
     overview();
@@ -55,116 +57,8 @@
         graph();
     }, 7);
 
-    var margin = {top: 30, right: 50, bottom: 70, left: 50};
-    var width = 300 - margin.left - margin.right;
-    var height = 300 - margin.top - margin.bottom;
-    var labels = true;
 
-    var min = Infinity, max = -Infinity;
-    var bd = [[]];
-    bd[0][0] = "Links";
-    bd[0][1] = [];
 
-    var chart = d3.box()
-            .whiskers(iqr(1.5))
-            .height(height)
-            .domain([min, max])
-            .showLabels(labels);
-
-    var svg = d3.select("body").append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .attr("class", "box")
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    // the x-axis
-    var x = d3.scale.ordinal()
-            .domain(bd.map(function (d) {
-                return d[0]
-            }))
-            .rangeRoundBands([0, width], 0.7, 0.3);
-
-    var xAxis = d3.svg.axis()
-            .scale(x)
-            .orient("bottom");
-
-    // the y-axis
-    var y = d3.scale.linear()
-            .domain([min, max])
-            .range([height + margin.top, 0 + margin.top]);
-
-    var yAxis = d3.svg.axis()
-            .scale(y)
-            .orient("left");
-
-    // draw the boxplots
-    var box = svg.selectAll(".box")
-            .data(bd)
-            .enter().append("g")
-            .attr("transform", function (d) {
-                return "translate(" + x(d[0]) + "," + margin.top + ")";
-            })
-            .call(chart.width(x.rangeBand()));
-
-    // add a title
-    svg.append("text")
-            .attr("x", (width / 2))
-            .attr("y", 0 + (margin.top / 2))
-            .attr("text-anchor", "middle")
-            .style("font-size", "18px")
-            .text("Links");
-
-    // draw y axis
-    svg.append("g")
-            .attr("class", "y axis")
-            .call(yAxis)
-            .append("text") // and text1
-            .attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .style("font-size", "16px")
-            .text("Links per Page");
-
-    // draw x axis
-    svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + (height + margin.top + 10) + ")")
-            .call(xAxis)
-            .append("text")             // text label for the x axis
-            .attr("x", (width / 2))
-            .attr("y", 10)
-            .attr("dy", ".71em")
-            .style("text-anchor", "middle")
-            .style("font-size", "16px")
-            .text("Links");
-
-    function s() {
-        bd[0][1] = [];
-
-        if (data) {
-            $.each(data.nodes, function (i, n) {
-                if (n.linkscount) {
-                    min = Math.min(min, n.linkscount);
-                    max = Math.max(max, n.linkscount);
-                    bd[0][1].push(n.linkscount);
-                }
-            });
-        }
-
-        chart.domain([min, max]);
-
-        x.domain(bd.map(function (d) {
-            return d[0]
-        }));
-
-        y.domain([min, max]);
-
-        box.data(bd);
-        //box.call(chart.width(x.rangeBand()));
-        box.call(chart.duration(1000));
-    }
 </script>
 
 

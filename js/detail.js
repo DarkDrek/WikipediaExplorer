@@ -55,8 +55,8 @@ function revisionsLine(site, callback) {
             });
 
         var svg = d3.select("body").insert("svg", "svg")
-            .attr("width", widthLine + marginLine.left + marginLine.right)
-            .attr("height", heightLine + marginLine.top + marginLine.bottom)
+            .attr("rss_width", widthLine + marginLine.left + marginLine.right)
+            .attr("rss_height", heightLine + marginLine.top + marginLine.bottom)
             .append("g")
             .attr("transform", "translate(" + marginLine.left + "," + marginLine.top + ")");
 
@@ -85,7 +85,7 @@ function revisionsLine(site, callback) {
             .call(yAxis);
 
         svg.append("g")
-            .attr("class", "axis axis--x")
+            .attr("class", "axis axis--ls_x")
             .attr("transform", "translate(0," + (heightLine + 10) + ")")
             .call(xAxis);
 
@@ -151,7 +151,7 @@ function languagesBars(langlinks) {
                 ;
 
             svgBar.append("g")
-                .attr("class", "x axis")
+                .attr("class", "ls_x axis")
                 .attr("transform", "translate(0," + height + ")")
                 .call(xAxisBar);
 
@@ -163,7 +163,7 @@ function languagesBars(langlinks) {
                 .data(languges)
                 .enter().append("rect")
                 .attr("class", "bar")
-                .attr("x", function (d) {
+                .attr("ls_x", function (d) {
                     return xBar(d.name);
                 })
                 .attr("width", xBar.rangeBand())

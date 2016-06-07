@@ -2247,7 +2247,7 @@
 
        case "b":
        case "o":
-       case "x":
+       case "ls_x":
        case "X":
         if (symbol === "#") prefix = "0" + type.toLowerCase();
 
@@ -6397,7 +6397,7 @@
       }
       for (i = 0; i < n; ++i) {
         o = nodes[i];
-        if (isNaN(o.x)) o.x = position("x", w);
+        if (isNaN(o.x)) o.x = position("ls_x", w);
         if (isNaN(o.y)) o.y = position("y", h);
         if (isNaN(o.px)) o.px = o.x;
         if (isNaN(o.py)) o.py = o.y;
@@ -9104,17 +9104,17 @@
           return /[ew]$/.test(d) ? -3 : null;
         }).attr("y", function(d) {
           return /^[ns]/.test(d) ? -3 : null;
-        }).attr("width", 6).attr("height", 6).style("visibility", "hidden");
+        }).attr("rss_width", 6).attr("rss_height", 6).style("visibility", "hidden");
         resize.style("display", brush.empty() ? "none" : null);
         var gUpdate = d3.transition(g), backgroundUpdate = d3.transition(background), range;
         if (x) {
           range = d3_scaleRange(x);
-          backgroundUpdate.attr("x", range[0]).attr("width", range[1] - range[0]);
+          backgroundUpdate.attr("x", range[0]).attr("rss_width", range[1] - range[0]);
           redrawX(gUpdate);
         }
         if (y) {
           range = d3_scaleRange(y);
-          backgroundUpdate.attr("y", range[0]).attr("height", range[1] - range[0]);
+          backgroundUpdate.attr("y", range[0]).attr("rss_height", range[1] - range[0]);
           redrawY(gUpdate);
         }
         redraw(gUpdate);
@@ -9181,11 +9181,11 @@
     }
     function redrawX(g) {
       g.select(".extent").attr("x", xExtent[0]);
-      g.selectAll(".extent,.n>rect,.s>rect").attr("width", xExtent[1] - xExtent[0]);
+      g.selectAll(".extent,.n>rect,.s>rect").attr("rss_width", xExtent[1] - xExtent[0]);
     }
     function redrawY(g) {
       g.select(".extent").attr("y", yExtent[0]);
-      g.selectAll(".extent,.e>rect,.w>rect").attr("height", yExtent[1] - yExtent[0]);
+      g.selectAll(".extent,.e>rect,.w>rect").attr("rss_height", yExtent[1] - yExtent[0]);
     }
     function brushstart() {
       var target = this, eventTarget = d3.select(d3.event.target), event_ = event.of(target, arguments), g = d3.select(target), resizing = eventTarget.datum(), resizingX = !/^(n|s)$/.test(resizing) && x, resizingY = !/^(e|w)$/.test(resizing) && y, dragging = eventTarget.classed("extent"), dragRestore = d3_event_dragSuppress(target), center, origin = d3.mouse(target), offset;

@@ -2,7 +2,7 @@
  * Created by Sören on 31.05.2016.
  */
 
-var force, svg, marker, path, circle, text;
+var force, svg, marker, path, circle, text, axisLinksCount, axisLinksCountX;
 
 function graph() {
     initScales();
@@ -15,12 +15,12 @@ function graph() {
     });
     var links = data.links;
 
-    force = /*cola.d3adaptor()*/ d3.layout.force()
+    force = cola.d3adaptor() /* d3.layout.force()*/
         .nodes(nodes)
         .links(links)
         .size([width, height])
-        //.avoidOverlaps(true)
-        //.symmetricDiffLinkLengths(100, 1.7)
+        .avoidOverlaps(true)
+        .symmetricDiffLinkLengths(100, 1.7)
         /*
          .linkStrength(0.1)
          .friction(0.9)
@@ -34,7 +34,8 @@ function graph() {
 
     svg = d3.select("body").append("svg")
         .attr("width", width)
-        .attr("height", height);
+        .attr("height", height)
+        .attr("id", "graph");
 
     // Per-type markers, as they don't inherit styles.
 
@@ -80,14 +81,33 @@ function graph() {
             c.selected = false;
             c.showText = false;
             mousemover();
-        })
-        .call(force.drag);
+        });
 
     text = svg.append("g").selectAll("text")
         .data(force.nodes())
         .enter().append("text")
-        .attr("x", textX)
+        .attr("ls_x", textX)
         .attr("y", ".31em");
+
+    svg.select("defs").append("linearGradient")
+        .attr("id", "links_axis_color")
+        .attr("x1", "0%")
+        .attr("x2", "0%")
+        .attr("y1", "0%")
+        .attr("y2", "100%")
+        .selectAll("stop")
+        .data([{color: "red", offset: "0%"}, {color: "yellow", offset: "100%"}])
+        .enter().append("stop")
+        .attr("stop-color", function (n) {
+            return n.color;
+        })
+        .attr("offset", function (n) {
+            return n.offset;
+        });
+    axisLinksCount = svg.append("g").attr("class", "axis").attr("transform", "translate(60,30)");
+    axisLinksCountX = d3.scale.linear().range([0, 300]);
+    axisLinksCount.call(d3.svg.axis().scale(axisLinksCountX).ticks(15).orient("left"));
+    axisLinksCount.append("rect").attr("x", 1).attr("y", 0).attr("width", 10).attr("height", 300).style("fill", "url(#links_axis_color)");
 
     resumeLoad();
 
@@ -133,7 +153,7 @@ function circleFill(c) {
 
 function circleRadius(c) {
     if (c.size != undefined && c.size > 0) {
-        return scaleSize(c.size)
+        return scaleSize(c.size);
     }
     return 6;
 }
@@ -160,7 +180,11 @@ function resumeLoad() {
             n.categories = d.nodes[n.name].categories;
             n.available = d.nodes[n.name].available;
 
+            axisLinksCountX.domain([data.linkscount.max, data.linkscount.min]);
+            axisLinksCount.call(d3.svg.axis().scale(axisLinksCountX).ticks(15).orient("left"));
+
             initScales();
+            linksScaleAxes();
             tick();
         });
     });
@@ -169,4 +193,9 @@ function resumeLoad() {
 function initScales() {
     scaleSize = d3.scale.log().domain([1, data.size.max]).range([6, 24]);
     scaleLinksCount = d3.scale.linear().domain([data.linkscount.min, data.linkscount.max]).range(["yellow", "red"]).interpolate(d3.interpolateRgb);
+}
+
+function linksScaleAxes() {
+
+
 }
