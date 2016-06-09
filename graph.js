@@ -184,7 +184,6 @@ function resumeLoad() {
             axisLinksCount.call(d3.svg.axis().scale(axisLinksCountX).ticks(15).orient("left"));
 
             initScales();
-            linksScaleAxes();
             tick();
         });
     });
@@ -193,9 +192,4 @@ function resumeLoad() {
 function initScales() {
     scaleSize = d3.scale.log().domain([1, data.size.max]).range([6, 24]);
     scaleLinksCount = d3.scale.linear().domain([data.linkscount.min, data.linkscount.max]).range(["yellow", "red"]).interpolate(d3.interpolateRgb);
-}
-
-function linksScaleAxes() {
-
-
 }

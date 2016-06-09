@@ -35,6 +35,17 @@
     var scaleSize, scaleLinksCount, data;
     var api = new WikipediaExplorerAPI(lang);
 
+    var boxes = svg = d3.select("body").append("svg")
+            .attr("width", 350)
+            .attr("height", 700)
+            .attr("id", "boxes")
+            .attr("transform", "translate(1500,50)");
+
+    var linkBox = [[]];
+    linkBox[0][0] = "Links";
+    linkBox[0][1] = [0];
+    var links = new boxPlot(boxes, linkBox, {min: 0, max: 0});
+
     function tick() {
         path.attr("d", linkArc);
         marker.attr("refX", markerRefX);
@@ -46,7 +57,8 @@
         links_max.text(linksMaxText);
         links_min.text(linksMinText);
         links_average.text(linksAverageText);
-        //linksStatisicCallback();
+        var d = linksStatisicCallback();
+        links.setData(d.d,{min:d.min,max:d.max});
     }
 
     overview();
@@ -57,6 +69,22 @@
         graph();
     }, 7);
 
+    function linksStatisicCallback() {
+        linkBox[0][1] = [];
+        var min = Infinity;
+        var max = -Infinity;
+        if (data) {
+            $.each(data.nodes, function (i, n) {
+                if (n.linkscount) {
+                    min = Math.min(min, n.linkscount);
+                    max = Math.max(max, n.linkscount);
+                    linkBox[0][1].push(n.linkscount);
+                }
+            });
+            return {min: min, max: max, d: linkBox};
+        }
+        return {min: 0, max: 0, d: [0]};
+    }
 
 
 </script>

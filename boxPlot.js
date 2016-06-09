@@ -94,13 +94,12 @@ function boxPlot(svg, data, minMax, margin, width, height) {
      .style("font-size", "16px")
      .text("Quarter");*/
 
-    this.setData = function (d, mm) {
+    this.setData = function (d, mm) { console.log(d,mm);
         this.chart.domain([mm.min, mm.max]);
         this.y.domain([mm.min, mm.max]).range([this.height + this.margin.top, this.margin.top]);
-        this.svgyAxis.call(this.yAxis);
         this.box.data(d);
-        //this.box.call(linksBoxPlot.chart.duration(1000));
-        //this.svgyAxis.call(linksBoxPlot.yAxis);
+        this.svgyAxis.call(this.yAxis);
+        this.box.call(this.chart.duration(10));
     };
 
 // Returns a function to compute the interquartile range.
