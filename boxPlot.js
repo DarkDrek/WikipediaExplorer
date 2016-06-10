@@ -20,11 +20,11 @@ function boxPlot(svg, data, minMax, margin, width, height) {
 
     this.chart = d3.box()
         .whiskers(iqr(1.5))
-        .height(height)
+        .height(this.height)
         .domain([minMax.min, minMax.max])
         .showLabels(this.labels);
 
-    svg.attr("width", this.width + this.margin.left + this.margin.right)
+    svg = svg.attr("width", this.width + this.margin.left + this.margin.right)
         .attr("height", this.height + this.margin.top + this.margin.bottom)
         .attr("class", "box")
         .append("g")
@@ -43,7 +43,7 @@ function boxPlot(svg, data, minMax, margin, width, height) {
     // the y-axis
     this.y = d3.scale.linear()
         .domain([minMax.min, minMax.max])
-        .range([this.height + this.margin.top, 0 + this.margin.top]);
+        .range([this.height + this.margin.top, this.margin.top]).nice();
 
     this.yAxis = d3.svg.axis()
         .scale(this.y)
@@ -94,7 +94,7 @@ function boxPlot(svg, data, minMax, margin, width, height) {
      .style("font-size", "16px")
      .text("Quarter");*/
 
-    this.setData = function (d, mm) { console.log(d,mm);
+    this.setData = function (d, mm) {
         this.chart.domain([mm.min, mm.max]);
         this.y.domain([mm.min, mm.max]).range([this.height + this.margin.top, this.margin.top]);
         this.box.data(d);

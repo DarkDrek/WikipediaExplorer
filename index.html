@@ -15,11 +15,24 @@
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script src="js/jquery.prettyPhoto.js" type="text/javascript" charset="utf-8"></script>
 
+<!-- fancy search box -->
+<!-- CSS -->
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+<!-- Fonts -->
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,700italic,400,600,700' rel='stylesheet' type='text/css'>
+
+<!-- jQuery Easing -->
+<script type="text/javascript" src="js/jquery.easing.1.3.js"></script>
+
+<script type="text/javascript" src="js/functions.js"></script>
+
 <!-- own scripts -->
-<script src="wikiExplorer.js" charset="utf-8"></script>
-<script src="graph.js" charset="utf-8"></script>
-<script src="overviewStatistics.js"></script>
-<script src="boxPlot.js" charset="UTF-8"></script>
+<script type="text/javascript" src="util.js" charset="utf-8"></script>
+<script type="text/javascript" src="wikiExplorer.js" charset="utf-8"></script>
+<script type="text/javascript" src="graph.js" charset="utf-8"></script>
+<script type="text/javascript" src="overviewStatistics.js"></script>
+<script type="text/javascript" src="boxPlot.js" charset="UTF-8"></script>
 
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function () {
@@ -29,22 +42,43 @@
     });
 </script>
 
+<div id="search-form">
+    <form class="form-container" action="">
+        <input type="text" class="search-field" id="txtSearch" value="Type search text here..." />
+        <div class="submit-container">
+            <input type="submit" value="" class="submit" />
+        </div>
+    </form>
+    <div class="popup">
+        <p>Please fill out this field.</p>
+    </div>
+</div>
+
+
+
 <script>
 
     var lang = "en";
     var scaleSize, scaleLinksCount, data;
     var api = new WikipediaExplorerAPI(lang);
 
-    var boxes = svg = d3.select("body").append("svg")
-            .attr("width", 350)
-            .attr("height", 700)
-            .attr("id", "boxes")
-            .attr("transform", "translate(1500,50)");
+    var site = getQueryVariable('site') || false;
+    site = site == "" ? false : site;
+
+    var LinkboxesSvg = svg = d3.select("body").append("svg").attr("id", "links_boxes");
 
     var linkBox = [[]];
     linkBox[0][0] = "Links";
     linkBox[0][1] = [0];
-    var links = new boxPlot(boxes, linkBox, {min: 0, max: 0});
+    var links = new boxPlot(LinkboxesSvg, linkBox, {min: 0, max: 0}, undefined, 300, 350);
+
+
+    var SizeboxesSvg = svg = d3.select("body").append("svg").attr("id", "size_boxes");
+
+    var SizeBox = [[]];
+    SizeBox[0][0] = "Size";
+    SizeBox[0][1] = [0];
+    var size = new boxPlot(SizeboxesSvg, SizeBox, {min: 0, max: 0}, undefined, 300, 350);
 
     function tick() {
         path.attr("d", linkArc);
@@ -57,8 +91,10 @@
         links_max.text(linksMaxText);
         links_min.text(linksMinText);
         links_average.text(linksAverageText);
-        var d = linksStatisicCallback();
-        links.setData(d.d,{min:d.min,max:d.max});
+        var ld = linksStatisicCallback();
+        links.setData(ld.d,{min:ld.min,max:ld.max});
+        var sd = sizeStatisicCallback();
+        size.setData(sd.d,{min:sd.min,max:sd.max});
     }
 
     overview();
@@ -67,7 +103,7 @@
         data = d;
         initScales();
         graph();
-    }, 7);
+    }, 7, site);
 
     function linksStatisicCallback() {
         linkBox[0][1] = [];
@@ -86,10 +122,28 @@
         return {min: 0, max: 0, d: [0]};
     }
 
+    function sizeStatisicCallback() {
+        linkBox[0][1] = [];
+        var min = Infinity;
+        var max = -Infinity;
+        if (data) {
+            $.each(data.nodes, function (i, n) {
+                if (n.size) {
+                    min = Math.min(min, n.size);
+                    max = Math.max(max, n.size);
+                    linkBox[0][1].push(n.size);
+                }
+            });
+            return {min: min, max: max, d: linkBox};
+        }
+        return {min: 0, max: 0, d: [0]};
+    }
 
+    $('form').submit(function (n) {
+        var title = $('#txtSearch').val();
+        window.location.replace("index.html?site="+title);
+        return false;
+    });
 </script>
-
-
-<input type="text" placeholder="search..." id="txtSearch">
 </body>
 </html>

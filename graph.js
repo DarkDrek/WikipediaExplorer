@@ -68,6 +68,12 @@ function graph() {
         .enter().append("circle")
         .attr("r", circleRadius)
         .style("stroke", "black")
+        .style("stroke-width", function (d) {
+            if(d.main){
+                return 3;
+            }
+            return 1;
+        })
         .style("fill", circleFill)
         .on('click', function (c) {
             $.prettyPhoto.open('detail.html?site=' + c.name + '&iframe=true&width=100%&height=100%');

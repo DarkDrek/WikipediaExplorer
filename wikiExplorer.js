@@ -80,20 +80,30 @@ WikipediaExplorerAPI.prototype.convertData = function (data, available) {
     return d;
 };
 
-WikipediaExplorerAPI.prototype.getRandom = function (func, limit) {
+WikipediaExplorerAPI.prototype.getRandom = function (func, limit, name) {
     "use strict";
     func = func || function () {
         };
     limit = limit || 500;
     var wep = this;
 
-    var optins = wep.random;
+    if (name) {
+        var optins = wep.name;
+        optins.titles = name;
+    } else {
+        var optins = wep.random;
+    }
+
     optins.pllimit = limit;
     optins.cllimit = limit;
     optins.lllimit = limit;
 
     this._load(optins, function (data) {
         var d = wep.convertData(data);
+
+        var title = data.query.pages[Object.keys(data.query.pages)[0]].title;
+        d.nodes[title].main = true;
+
 
         var chainArray = [function (nodes, next) {
             next(d);

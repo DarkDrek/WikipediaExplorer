@@ -16,22 +16,37 @@ text {
     text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
 
-#txtSearch {
+#search-form {
     float: right;
     position: absolute;
-    top: 5px;
-    right: 5px;
+    top: 6px;
+    right: 6px;
+    width: 300px;
 }
 
 #map {
     border: 1px solid black;
     position: absolute;
     bottom: 5px;
-    right: 5px;
+    right: 6px;
 }
 
 #graph g.axis path{
     fill: none;
     stroke: #666;
     stroke-width: 1.5px;
+}
+
+#links_boxes{
+    border: 1px solid black;
+    position: absolute;
+    bottom: 404px;
+    right: 6px;
+}
+
+#size_boxes{
+    border: 1px solid black;
+    position: absolute;
+    bottom: 45px;
+    right: 6px;
 }
