@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d762c5e1-c66b-4891-b80f-8e5a78ddd2a8" name="Default" comment="first commit - current working state">
+    <list default="true" id="d762c5e1-c66b-4891-b80f-8e5a78ddd2a8" name="Default" comment="">
       <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="" />
     </list>
     <list id="786d8bad-1af2-42f7-b808-6acca9a82dd6" name="New changelist" comment="" />
@@ -143,6 +143,20 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="WikipediaExplorer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="WikipediaExplorer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="WikipediaExplorer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value=".idea" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -611,7 +625,7 @@
       <workItem from="1464623270291" duration="24069000" />
       <workItem from="1464694340333" duration="12721000" />
       <workItem from="1464937440319" duration="4326000" />
-      <workItem from="1465547233252" duration="60000" />
+      <workItem from="1465547233252" duration="72000" />
     </task>
     <task id="LOCAL-00001" summary="first commit - current working state">
       <created>1463583340490</created>
@@ -662,11 +676,18 @@
       <option name="project" value="LOCAL" />
       <updated>1465547273505</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="first commit - current working state">
+      <created>1465547297493</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1465547297493</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="103575000" />
+    <option name="totallyTimeSpent" value="103587000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="52" width="1920" height="1124" extended-state="6" />
