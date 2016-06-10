@@ -38,7 +38,7 @@ function linksAverageText() {
                 count++;
             }
         });
-        return text += links / count;
+        return text += (links / count).toFixed(2);
     }
     return text += 0;
 }

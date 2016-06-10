@@ -66,16 +66,18 @@ WikipediaExplorerAPI.prototype.convertData = function (data, available) {
     }
 
     (page.links || []).forEach(function (link) {
-        if (!d.nodes[link.title]) {
-            d.nodes[link.title] = {
-                id: link.title,
-                name: link.title
-            };
+        if( link.show !== false ) {
+            if (!d.nodes[link.title]) {
+                d.nodes[link.title] = {
+                    id: link.title,
+                    name: link.title
+                };
+            }
+            d.links.push({
+                source: d.nodes[main.id],
+                target: d.nodes[link.title],
+            });
         }
-        d.links.push({
-            source: d.nodes[main.id],
-            target: d.nodes[link.title],
-        });
     });
     return d;
 };
@@ -132,14 +134,39 @@ WikipediaExplorerAPI.prototype.getRandom = function (func, limit, name) {
 };
 
 
-WikipediaExplorerAPI.prototype._load = function (options, func) {
+WikipediaExplorerAPI.prototype._load = function (options, func, data) {
+    var wea = this;
     this.mediaWikiJS.send(options, function (d) {
         //console.log("_load", d);
         if (typeof d.warnings !== 'undefined') {
             console.error(d.warnings.main);
             throw d.warnings.main;
         } else {
-            func(d);
+            var np = d.query.pages[Object.keys(d.query.pages)[0]];
+            if( !data ){
+                data = d;
+            } else {
+                var p = data.query.pages[Object.keys(data.query.pages)[0]];
+                np.links.map(function (l) {
+                    l.show = false;
+                });
+                p.links = p.links.concat(np.links);
+            }
+
+            if( "batchcomplete" in d ){
+                func(data);
+            }
+            else{
+                var o = {
+                    action: 'query',
+                    prop: 'links',
+                    plnamespace: '0',
+                    pllimit: 500,
+                    titles: np.title,
+                    plcontinue: d.continue.plcontinue
+                };
+                wea._load(o, func, data);
+            }
         }
     });
 };

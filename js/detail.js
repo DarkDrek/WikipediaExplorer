@@ -48,7 +48,7 @@ function revisionsLine(site, callback, language, svg) {
             .orient("left");
 
         var line = d3.svg.line()
-            .interpolate("step-after")
+            .interpolate("step-before")
             .x(function (d) {
                 return x(getTime(d));
             })
