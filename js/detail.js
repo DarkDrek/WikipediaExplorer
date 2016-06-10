@@ -1,12 +1,14 @@
-function revisionsLine(site, callback) {
+function revisionsLine(site, callback, language, svg) {
     "use strict";
-    var mwjs = new MediaWikiJS('http://en.wikipedia.org', null, null);
+    language = language || 'en';
+    var mwjs = new MediaWikiJS('http://' + language + '.wikipedia.org', null, null);
     mwjs.send({
         action: 'query',
         prop: 'revisions|langlinks',
         rvlimit: '100',
         rvprop: 'size|flags|timestamp',
         llprop: 'langname',
+        lllimit: 15,
         titles: site
     }, function (data) {
         var pages = data.query.pages;
@@ -15,18 +17,18 @@ function revisionsLine(site, callback) {
             return typeof d.minor === 'undefined';
         });
 
-        var marginLine = {top: 40.5, right: 40.5, bottom: 50.5, left: 100},
-            widthLine = 960 - marginLine.left - marginLine.right,
-            heightLine = 500 - marginLine.top - marginLine.bottom;
+        var margin = {top: 40.5, right: 20, bottom: 50.5, left: 100},
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
 
-        var getRevId = function (rev) {
+        var getTime = function (rev) {
             return d3.time.format.iso.parse(rev.timestamp);
         };
 
         var x = d3.time.scale.utc()
-            .domain([d3.min(revisions, getRevId), d3.max(revisions, getRevId)])
-            .range([0, widthLine])
-            .nice(d3.time.month.utc, 3);
+            .domain([d3.min(revisions, getTime), d3.max(revisions, getTime)])
+            .range([0, width])
+            .nice();
 
         var getSize = function (rev) {
             return rev.size;
@@ -34,35 +36,40 @@ function revisionsLine(site, callback) {
 
         var y = d3.scale.linear()
             .domain([d3.min(revisions, getSize), d3.max(revisions, getSize)])
-            .range([heightLine, 0]);
+            .range([height, 0])
+            .nice();
 
         var xAxis = d3.svg.axis()
             .scale(x)
-            .orient("bottom")
-            .ticks(d3.time.month.utc, 3);
+            .orient("bottom");
 
         var yAxis = d3.svg.axis()
             .scale(y)
             .orient("left");
 
         var line = d3.svg.line()
-        //.interpolate("step-after")
+            .interpolate("step-after")
             .x(function (d) {
-                return x(getRevId(d));
+                return x(getTime(d));
             })
             .y(function (d) {
                 return y(d.size);
             });
 
-        var svg = d3.select("body").insert("svg", "svg")
-            .attr("rss_width", widthLine + marginLine.left + marginLine.right)
-            .attr("rss_height", heightLine + marginLine.top + marginLine.bottom)
+        if (svg) {
+            svg.selectAll('*').remove();
+        } else {
+            svg = d3.select("body").append("svg");
+        }
+
+        svg = svg.attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
             .append("g")
-            .attr("transform", "translate(" + marginLine.left + "," + marginLine.top + ")");
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         svg.append("text")
-            .attr("x", widthLine / 2)
-            .attr("y", 0)
+            .attr("x", width / 2)
+            .attr("y", -10)
             .text(site)
             .attr("font-family", "sans-serif")
             .attr("font-size", "20px")
@@ -73,20 +80,38 @@ function revisionsLine(site, callback) {
             .enter().append("circle")
             .attr("r", 3.5)
             .attr("cx", function (d) {
-                return x(getRevId(d));
+                return x(getTime(d));
             })
             .attr("cy", function (d) {
-                return y(d.size);
+                return y(getSize(d));
+            })
+            .append("svg:title")
+            .text(function (d) {
+                return d.size.toLocaleString() + ' bytes \n' + d3.time.format.iso.parse(d.timestamp).toLocaleString();
             });
+
+        svg.append("text")
+            .attr("class", "y label")
+            .attr("text-anchor", "end")
+            .attr("y", -20)
+            .attr("x", 0)
+            .text("size in bytes");
 
         svg.append("g")
             .attr("class", "axis axis--y")
             .attr("transform", "translate(-10,0)")
             .call(yAxis);
 
+        svg.append("text")
+            .attr("class", "x label")
+            .attr("text-anchor", "end")
+            .attr("x", width)
+            .attr("y", height + 50)
+            .text("date of revision");
+
         svg.append("g")
-            .attr("class", "axis axis--ls_x")
-            .attr("transform", "translate(0," + (heightLine + 10) + ")")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0," + (height + 10) + ")")
             .call(xAxis);
 
         svg.append("path")
@@ -111,12 +136,17 @@ function languagesBars(langlinks) {
                 }, function (d_) {
                     var pages = d_.query.pages;
                     var revision = pages[Object.keys(pages)[0]].revisions[0];
-                    callback(null, {name: d.langname, size: revision.size});
+                    callback(null, {
+                        name: d.langname,
+                        size: revision.size,
+                        lang: d.lang,
+                        site: d['*']
+                    });
                 });
             }
         }),
         function (err, results) {
-            var margin = {top: 80, right: 180, bottom: 80, left: 80},
+            var margin = {top: 80, right: 0, bottom: 80, left: 80},
                 width = 960 - margin.left - margin.right,
                 height = 500 - margin.top - margin.bottom;
 
@@ -143,27 +173,40 @@ function languagesBars(langlinks) {
                 .scale(yBar)
                 .orient("left");
 
-            var svgBar = d3.select("body").append("svg")
-                    .attr("width", width + margin.left + margin.right)
-                    .attr("height", height + margin.top + margin.bottom)
-                    .append("g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-                ;
+            var svg = d3.select("body").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            svgBar.append("g")
-                .attr("class", "ls_x axis")
+            svg.append("text")
+                .attr("class", "x label")
+                .attr("text-anchor", "end")
+                .attr("x", width)
+                .attr("y", height + 35)
+                .text("language");
+
+            svg.append("g")
+                .attr("class", "x axis")
                 .attr("transform", "translate(0," + height + ")")
                 .call(xAxisBar);
 
-            svgBar.append("g")
+            svg.append("text")
+                .attr("class", "y label")
+                .attr("text-anchor", "end")
+                .attr("y", -20)
+                .attr("x", 0)
+                .text("size in bytes");
+
+            svg.append("g")
                 .attr("class", "y axis")
                 .call(yAxisBar);
 
-            svgBar.selectAll(".bar")
+            svg.selectAll(".bar")
                 .data(languges)
                 .enter().append("rect")
                 .attr("class", "bar")
-                .attr("ls_x", function (d) {
+                .attr("x", function (d) {
                     return xBar(d.name);
                 })
                 .attr("width", xBar.rangeBand())
@@ -174,8 +217,11 @@ function languagesBars(langlinks) {
                     return height - yBar(d.size);
                 })
                 .on('click', function (d) {
-                    d3.select('svg').remove();
-                    revisionsLine('test');
+                    revisionsLine(d.site, undefined, d.lang, d3.select('svg'));
+                })
+                .append("svg:title")
+                .text(function (d) {
+                    return d.size.toLocaleString() + ' bytes \n' + d.name;
                 });
         });
 }
@@ -192,6 +238,6 @@ function getQueryVariable(variable) {
     console.log('Query variable %s not found', variable);
 }
 
-revisionsLine(getQueryVariable('site'), function (langlinks) {
+revisionsLine(getQueryVariable('site') || 'Albert Einstein', function (langlinks) {
     languagesBars(langlinks);
 });
