@@ -17,9 +17,12 @@ function revisionsLine(site, callback, language, svg) {
             return typeof d.minor === 'undefined';
         });
 
+        var windowWidth = window.innerWidth * 0.9,
+            windowHeight = window.innerHeight * 0.55;
+
         var margin = {top: 40.5, right: 20, bottom: 50.5, left: 100},
-            width = 960 - margin.left - margin.right,
-            height = 500 - margin.top - margin.bottom;
+            width = windowWidth - margin.left - margin.right,
+            height = windowHeight - margin.top - margin.bottom;
 
         var getTime = function (rev) {
             return d3.time.format.iso.parse(rev.timestamp);
@@ -146,9 +149,12 @@ function languagesBars(langlinks) {
             }
         }),
         function (err, results) {
-            var margin = {top: 80, right: 0, bottom: 80, left: 80},
-                width = 960 - margin.left - margin.right,
-                height = 500 - margin.top - margin.bottom;
+            var windowWidth = window.innerWidth * 0.9,
+                windowHeight = window.innerHeight * 0.40;
+
+            var margin = {top: 40, right: 0, bottom: 40, left: 80},
+                width = windowWidth - margin.left - margin.right,
+                height = windowHeight - margin.top - margin.bottom;
 
             var languges = results;
 
